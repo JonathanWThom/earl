@@ -1,0 +1,4 @@
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/matoous/go-nanoid v1.4.1 h1:Yag04X+qPMDtYbyJsMDhoe8rP5kRl293b2QK8KRp2SE=
+github.com/matoous/go-nanoid v1.4.1/go.mod h1:fvGBnhcQ+zcrB3qJIG32PAN11J/y1IYkGX2/VeHzuH0=
