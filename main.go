@@ -9,7 +9,13 @@ import (
 	"net/url"
 )
 
-// make this type better
+// @todo: Add persistence layer, maybe some caching too
+// @todo: Associate links with users/accounts, add auth
+// @todo: Add metrics storage and viewing
+// @todo: Tests
+// @todo: Break up main.go
+
+// @todo: Make this type better
 var links = make(map[string]string)
 
 func main() {
@@ -106,7 +112,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// log things
+	// @todo: Log things for user that the link belongs to
 
 	http.Redirect(w, req, url, 302)
 }
