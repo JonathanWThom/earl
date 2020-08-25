@@ -24,21 +24,28 @@ type link struct {
 	identifier string
 }
 
-func createLink(original string) *link {
+func createLink(original string) (*link, error) {
+	// validate link
 	link := &link{original: original}
-	link.shorten()
+	err := link.shorten()
+	if err != nil {
+		return link, err
+	}
+
 	links[link.identifier] = link.original
 
-	return link
+	return link, nil
 }
 
-func (link *link) shorten() {
+func (link *link) shorten() error {
 	identifier, err := gonanoid.ID(6)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	link.identifier = identifier
+
+	return nil
 }
 
 func (link *link) shortened(request *http.Request) string {
@@ -48,21 +55,33 @@ func (link *link) shortened(request *http.Request) string {
 func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	url := req.FormValue("url")
-	// handle error
-	link := createLink(url)
+	if url == "" {
+		http.Error(w, "Missing parameter: url", http.StatusBadRequest)
+		return
+	}
 
+	link, err := createLink(url)
+	if err != nil {
+		http.Error(w, "Invalid parameter: url", http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "Your short url: %s\n", link.shortened(req))
 }
 
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	fmt.Println(links)
-	url := links[vars["identifier"]]
+	identifier := vars["identifier"]
+	url := links[identifier]
+
+	if url == "" {
+		msg := fmt.Sprintf("Unable to find %s\n", identifier)
+		http.Error(w, msg, http.StatusNotFound)
+		return
+	}
 
 	// log things
-	// redirect here
-	// handle empty
 
 	http.Redirect(w, req, url, 302)
-	//fmt.Fprintf(w, "%s\n", url)
 }
