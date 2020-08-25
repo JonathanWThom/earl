@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/matoous/go-nanoid"
 	"net/http"
+	"net/url"
 )
 
 // make this type better
@@ -13,9 +15,11 @@ var links = make(map[string]string)
 func main() {
 	r := mux.NewRouter()
 
+	// @todo: Add generic logging middleware around routes
 	r.HandleFunc("/{identifier}", getLinkHandler).Methods("GET")
 	r.HandleFunc("/links", createLinkHandler).Methods("POST")
 
+	// @todo: Make port dynamic
 	http.ListenAndServe(":8080", r)
 }
 
@@ -25,9 +29,13 @@ type link struct {
 }
 
 func createLink(original string) (*link, error) {
-	// validate link
 	link := &link{original: original}
-	err := link.shorten()
+	err := link.validate()
+	if err != nil {
+		return link, err
+	}
+
+	err = link.shorten()
 	if err != nil {
 		return link, err
 	}
@@ -44,6 +52,23 @@ func (link *link) shorten() error {
 	}
 
 	link.identifier = identifier
+
+	return nil
+}
+
+func (link *link) validate() error {
+	original := link.original
+	_, err := url.ParseRequestURI(original)
+	if err != nil {
+		return errors.New("Invalid URL")
+	}
+
+	u, err := url.Parse(original)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return errors.New("Invalid URL")
+	}
+
+	// @todo: Could also try a GET request on link to make sure it exists
 
 	return nil
 }
