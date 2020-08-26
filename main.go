@@ -8,6 +8,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 	"github.com/matoous/go-nanoid"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,17 +26,17 @@ var db *gorm.DB
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		panic("No DATABASE_URL variable set")
+		log.Fatal("No DATABASE_URL variable set")
 	}
 	db, err = gorm.Open("postgres", connStr)
-	db.LogMode(true)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+	db.LogMode(true)
 	defer db.Close()
 	db.AutoMigrate(&Link{})
 
@@ -45,8 +46,11 @@ func main() {
 	r.HandleFunc("/{identifier}", getLinkHandler).Methods("GET")
 	r.HandleFunc("/links", createLinkHandler).Methods("POST")
 
-	// @todo: Make port dynamic
-	http.ListenAndServe(":8080", r)
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+	http.ListenAndServe(":"+port, r)
 }
 
 type Link struct {
