@@ -24,10 +24,8 @@ import (
 var db *gorm.DB
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
+	godotenv.Load()
+	var err error
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		log.Fatal("No DATABASE_URL variable set")
