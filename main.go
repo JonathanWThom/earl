@@ -6,9 +6,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/joho/godotenv"
 	"github.com/matoous/go-nanoid"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 // @todo: Add caching
@@ -21,11 +23,18 @@ import (
 var db *gorm.DB
 
 func main() {
-	var err error
-	db, err = gorm.Open("postgres", "sslmode=disable host=localhost port=5432 user=earl dbname=earl_development password=security")
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		panic("No DATABASE_URL variable set")
+	}
+	db, err = gorm.Open("postgres", connStr)
 	db.LogMode(true)
 	if err != nil {
-		panic("failed to connect database")
+		panic(err)
 	}
 	defer db.Close()
 	db.AutoMigrate(&Link{})
