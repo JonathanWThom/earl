@@ -4,21 +4,32 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/matoous/go-nanoid"
 	"net/http"
 	"net/url"
 )
 
-// @todo: Add persistence layer, maybe some caching too
-// @todo: Associate links with users/accounts, add auth
+// @todo: Add caching
+// @todo: Associate links with users/accounts (conditionally), add auth
 // @todo: Add metrics storage and viewing
 // @todo: Tests
 // @todo: Break up main.go
+// @todo: Add linter tool
 
-// @todo: Make this type better
-var links = make(map[string]string)
+var db *gorm.DB
 
 func main() {
+	var err error
+	db, err = gorm.Open("postgres", "sslmode=disable host=localhost port=5432 user=earl dbname=earl_development password=security")
+	db.LogMode(true)
+	if err != nil {
+		panic("failed to connect database")
+	}
+	defer db.Close()
+	db.AutoMigrate(&Link{})
+
 	r := mux.NewRouter()
 
 	// @todo: Add generic logging middleware around routes
@@ -29,13 +40,14 @@ func main() {
 	http.ListenAndServe(":8080", r)
 }
 
-type link struct {
-	original   string
-	identifier string
+type Link struct {
+	gorm.Model
+	Original   string `gorm:"not null"`
+	Identifier string `gorm:"unique;not null"`
 }
 
-func createLink(original string) (*link, error) {
-	link := &link{original: original}
+func createLink(original string) (*Link, error) {
+	link := &Link{Original: original}
 	err := link.validate()
 	if err != nil {
 		return link, err
@@ -46,24 +58,27 @@ func createLink(original string) (*link, error) {
 		return link, err
 	}
 
-	links[link.identifier] = link.original
+	err = db.Create(link).Error
+	if err != nil {
+		return link, err
+	}
 
 	return link, nil
 }
 
-func (link *link) shorten() error {
+func (link *Link) shorten() error {
 	identifier, err := gonanoid.ID(6)
 	if err != nil {
 		return err
 	}
 
-	link.identifier = identifier
+	link.Identifier = identifier
 
 	return nil
 }
 
-func (link *link) validate() error {
-	original := link.original
+func (link *Link) validate() error {
+	original := link.Original
 	_, err := url.ParseRequestURI(original)
 	if err != nil {
 		return errors.New("Invalid URL")
@@ -79,8 +94,8 @@ func (link *link) validate() error {
 	return nil
 }
 
-func (link *link) shortened(request *http.Request) string {
-	return fmt.Sprintf("%s/%s", request.Host, link.identifier)
+func (link *Link) shortened(request *http.Request) string {
+	return fmt.Sprintf("%s/%s", request.Host, link.Identifier)
 }
 
 func createLinkHandler(w http.ResponseWriter, req *http.Request) {
@@ -104,13 +119,16 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	identifier := vars["identifier"]
-	url := links[identifier]
+	link := Link{Identifier: identifier}
+	notFound := db.Where("identifier = ?", identifier).First(&link).RecordNotFound()
 
-	if url == "" {
+	if notFound == true {
 		msg := fmt.Sprintf("Unable to find %s\n", identifier)
 		http.Error(w, msg, http.StatusNotFound)
 		return
 	}
+
+	url := link.Original
 
 	// @todo: Log things for user that the link belongs to
 
