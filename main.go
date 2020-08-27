@@ -81,6 +81,7 @@ type Account struct {
 	Links []Link
 }
 
+// need to return json
 func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 	id, err := gonanoid.Nanoid()
 	token := base64.StdEncoding.EncodeToString([]byte(id))
@@ -101,6 +102,7 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func getLinksHandler(w http.ResponseWriter, req *http.Request) {
+	// share header fetch code
 	auth := req.Header.Get("Authorization")
 	account := &Account{}
 	if auth != "" {
@@ -137,6 +139,7 @@ func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 func createLink(original string, req *http.Request) (*Link, error) {
 	link := &Link{Original: original}
 
+	// share header code
 	auth := req.Header.Get("Authorization")
 	if auth != "" {
 		token := strings.ReplaceAll(auth, "basic ", "")
@@ -200,6 +203,7 @@ func (link *Link) shortened(request *http.Request) string {
 	return fmt.Sprintf("https://%s/%s", request.Host, link.Identifier)
 }
 
+// return json
 func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	url := req.FormValue("url")
