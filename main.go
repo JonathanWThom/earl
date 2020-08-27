@@ -9,13 +9,12 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	"github.com/jonathanwthom/earl/models"
 	"github.com/matoous/go-nanoid"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
-	"time"
 )
 
 // @todo: Add caching
@@ -37,9 +36,9 @@ func main() {
 	}
 	db.LogMode(true)
 	defer db.Close()
-	db.AutoMigrate(&Link{})
-	db.AutoMigrate(&Account{})
-	db.AutoMigrate(&View{})
+	db.AutoMigrate(&models.Link{})
+	db.AutoMigrate(&models.Account{})
+	db.AutoMigrate(&models.View{})
 
 	r := mux.NewRouter()
 
@@ -57,28 +56,38 @@ func main() {
 	http.ListenAndServe(":"+port, r)
 }
 
-type Link struct {
-	gorm.Model `json:"-"`
-	Original   string `gorm:"not null" json:"original""`
-	Identifier string `gorm:"unique;not null"`
-	Shortened  string `gorm:"unique" json:"shortened"`
-	AccountID  uint   `json:"-"`
-	Views      []View `json:"views"`
-}
+func createLink(original string, req *http.Request) (*models.Link, error) {
+	link := &models.Link{Original: original}
 
-type View struct {
-	ID         uint       `gorm:"primary_key" json:"-"`
-	CreatedAt  time.Time  `json:"createdAt"`
-	UpdatedAt  time.Time  `json:"-"`
-	DeletedAt  *time.Time `sql:"index" json:"-"`
-	LinkID     uint       `json:"-"`
-	RemoteAddr string     `json:"remoteAddr"`
-}
+	// share header code
+	auth := req.Header.Get("Authorization")
+	if auth != "" {
+		token := strings.ReplaceAll(auth, "basic ", "")
+		account := &models.Account{}
+		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
+		if notFound {
+			return link, errors.New("No account with token")
+		}
 
-type Account struct {
-	gorm.Model
-	Token string `gorm:"unique;not null"`
-	Links []Link
+		link.AccountID = account.ID
+	}
+
+	err := link.Validate()
+	if err != nil {
+		return link, err
+	}
+
+	err = link.Shorten(req)
+	if err != nil {
+		return link, err
+	}
+
+	err = db.Create(link).Error
+	if err != nil {
+		return link, err
+	}
+
+	return link, nil
 }
 
 // need to return json
@@ -89,7 +98,7 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Unable to create account", http.StatusInternalServerError)
 		return
 	}
-	account := &Account{Token: token}
+	account := &models.Account{Token: token}
 
 	err = db.Create(account).Error
 	if err != nil {
@@ -104,7 +113,7 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 	// share header fetch code
 	auth := req.Header.Get("Authorization")
-	account := &Account{}
+	account := &models.Account{}
 	if auth != "" {
 		token := strings.ReplaceAll(auth, "basic ", "")
 		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
@@ -119,7 +128,7 @@ func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	links := []Link{}
+	links := []models.Link{}
 	err := db.Where("account_id = ?", account.ID).Preload("Views").Find(&links).Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -134,73 +143,6 @@ func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
-}
-
-func createLink(original string, req *http.Request) (*Link, error) {
-	link := &Link{Original: original}
-
-	// share header code
-	auth := req.Header.Get("Authorization")
-	if auth != "" {
-		token := strings.ReplaceAll(auth, "basic ", "")
-		account := &Account{}
-		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
-		if notFound {
-			return link, errors.New("No account with token")
-		}
-
-		link.AccountID = account.ID
-	}
-
-	err := link.validate()
-	if err != nil {
-		return link, err
-	}
-
-	err = link.shorten(req)
-	if err != nil {
-		return link, err
-	}
-
-	err = db.Create(link).Error
-	if err != nil {
-		return link, err
-	}
-
-	return link, nil
-}
-
-func (link *Link) shorten(req *http.Request) error {
-	identifier, err := gonanoid.ID(6)
-	if err != nil {
-		return err
-	}
-
-	link.Identifier = identifier
-	link.Shortened = link.shortened(req)
-
-	return nil
-}
-
-func (link *Link) validate() error {
-	original := link.Original
-	_, err := url.ParseRequestURI(original)
-	if err != nil {
-		return errors.New("Invalid URL")
-	}
-
-	u, err := url.Parse(original)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return errors.New("Invalid URL")
-	}
-
-	// @todo: Could also try a GET request on link to make sure it exists
-
-	return nil
-}
-
-func (link *Link) shortened(request *http.Request) string {
-	return fmt.Sprintf("https://%s/%s", request.Host, link.Identifier)
 }
 
 // return json
@@ -230,7 +172,7 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	identifier := vars["identifier"]
-	link := Link{Identifier: identifier}
+	link := models.Link{Identifier: identifier}
 	notFound := db.Where("identifier = ?", identifier).First(&link).RecordNotFound()
 
 	if notFound == true {
@@ -243,7 +185,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	// @todo: More logging
 	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
-	view := &View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
+	view := &models.View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
 	// handle errors
 	db.Create(view)
 
