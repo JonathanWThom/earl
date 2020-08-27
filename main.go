@@ -19,9 +19,6 @@ import (
 )
 
 // @todo: Add caching
-// @todo: Associate links with users/accounts (conditionally), add auth
-// @todo: Add metrics storage and viewing
-// @todo: Tests
 // @todo: Break up main.go
 // @todo: Add linter tool
 
@@ -63,7 +60,8 @@ func main() {
 type Link struct {
 	gorm.Model `json:"-"`
 	Original   string `gorm:"not null" json:"original""`
-	Identifier string `gorm:"unique;not null" json:"identifier"`
+	Identifier string `gorm:"unique;not null"`
+	Shortened  string `gorm:"unique" json:"shortened"`
 	AccountID  uint   `json:"-"`
 	Views      []View `json:"views"`
 }
@@ -156,7 +154,7 @@ func createLink(original string, req *http.Request) (*Link, error) {
 		return link, err
 	}
 
-	err = link.shorten()
+	err = link.shorten(req)
 	if err != nil {
 		return link, err
 	}
@@ -169,13 +167,14 @@ func createLink(original string, req *http.Request) (*Link, error) {
 	return link, nil
 }
 
-func (link *Link) shorten() error {
+func (link *Link) shorten(req *http.Request) error {
 	identifier, err := gonanoid.ID(6)
 	if err != nil {
 		return err
 	}
 
 	link.Identifier = identifier
+	link.Shortened = link.shortened(req)
 
 	return nil
 }
@@ -198,7 +197,7 @@ func (link *Link) validate() error {
 }
 
 func (link *Link) shortened(request *http.Request) string {
-	return fmt.Sprintf("%s/%s", request.Host, link.Identifier)
+	return fmt.Sprintf("https://%s/%s", request.Host, link.Identifier)
 }
 
 func createLinkHandler(w http.ResponseWriter, req *http.Request) {
@@ -221,7 +220,7 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 	if link.AccountID != 0 {
 		msg = "Your short url (created for account): %s\n"
 	}
-	fmt.Fprintf(w, msg, link.shortened(req))
+	fmt.Fprintf(w, msg, link.Shortened)
 }
 
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
