@@ -97,7 +97,7 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Your account token: %s. Pass token as Authorization header: `basic your-token-goes-here`\n", account.Token)
+	fmt.Fprintf(w, "Your account token is: %s\n", account.Token)
 }
 
 func getLinksHandler(w http.ResponseWriter, req *http.Request) {
