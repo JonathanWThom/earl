@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -44,6 +45,8 @@ func main() {
 	r := mux.NewRouter()
 
 	// @todo: Add generic logging middleware around routes
+	// Order matters
+	r.HandleFunc("/links", getLinksHandler).Methods("GET")
 	r.HandleFunc("/{identifier}", getLinkHandler).Methods("GET")
 	r.HandleFunc("/links", createLinkHandler).Methods("POST")
 	r.HandleFunc("/accounts", createAccountHandler).Methods("POST")
@@ -56,10 +59,15 @@ func main() {
 }
 
 type Link struct {
-	gorm.Model
-	Original   string `gorm:"not null"`
-	Identifier string `gorm:"unique;not null"`
-	AccountID  uint
+	gorm.Model `json:"-"`
+	Original   string `gorm:"not null" json:"original""`
+	Identifier string `gorm:"unique;not null" json:"identifier"`
+	AccountID  uint   `json:"-"`
+}
+
+type View struct {
+	gorm.Model `json:"-"`
+	LinkID     uint `json:"-"`
 }
 
 type Account struct {
@@ -85,6 +93,40 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "Your account token: %s. Pass token as Authorization header: `basic your-token-goes-here`\n", account.Token)
+}
+
+func getLinksHandler(w http.ResponseWriter, req *http.Request) {
+	auth := req.Header.Get("Authorization")
+	account := &Account{}
+	if auth != "" {
+		token := strings.ReplaceAll(auth, "basic ", "")
+		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
+		if notFound {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Unable to find account")
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Must pass basic Authorization header to read links")
+		return
+	}
+
+	links := []Link{}
+	err := db.Where("account_id = ?", account.ID).Find(&links).Error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to fetch links")
+		return
+	}
+
+	js, err := json.Marshal(links)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(js)
 }
 
 func createLink(original string, req *http.Request) (*Link, error) {
