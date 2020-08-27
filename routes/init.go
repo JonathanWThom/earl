@@ -9,9 +9,9 @@ import (
 	"os"
 )
 
-func Serve(db *gorm.DB) {
+func Init(db *gorm.DB) {
 	r := mux.NewRouter()
-	h := handlers.Build(db)
+	h := handlers.Init(db)
 
 	// @todo: Add generic logging middleware around routes
 	// Order matters

@@ -8,10 +8,11 @@ import (
 
 // @todo: Add caching
 // @todo: Add linter tool
+// @todo: Return consistent json responses
 
 func main() {
 	godotenv.Load()
 	db := database.Init()
 	defer db.Close()
-	routes.Serve(db)
+	routes.Init(db)
 }

@@ -14,7 +14,7 @@ type HandlerSet struct {
 	CreateAccountHandler func(http.ResponseWriter, *http.Request)
 }
 
-func Build(database *gorm.DB) HandlerSet {
+func Init(database *gorm.DB) HandlerSet {
 	db = database
 
 	return HandlerSet{
