@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 // @todo: Add caching
@@ -67,7 +69,8 @@ type Account struct {
 }
 
 func createAccountHandler(w http.ResponseWriter, req *http.Request) {
-	token, err := gonanoid.Nanoid()
+	id, err := gonanoid.Nanoid()
+	token := base64.StdEncoding.EncodeToString([]byte(id))
 	if err != nil {
 		http.Error(w, "Unable to create account", http.StatusInternalServerError)
 		return
@@ -81,11 +84,24 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Your account token: %s. Pass token as Authorization header: `bearer your-token-goes-here`\n", account.Token)
+	fmt.Fprintf(w, "Your account token: %s. Pass token as Authorization header: `basic your-token-goes-here`\n", account.Token)
 }
 
-func createLink(original string) (*Link, error) {
+func createLink(original string, req *http.Request) (*Link, error) {
 	link := &Link{Original: original}
+
+	auth := req.Header.Get("Authorization")
+	if auth != "" {
+		token := strings.ReplaceAll(auth, "basic ", "")
+		account := &Account{}
+		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
+		if notFound {
+			return link, errors.New("No account with token")
+		}
+
+		link.AccountID = account.ID
+	}
+
 	err := link.validate()
 	if err != nil {
 		return link, err
@@ -144,14 +160,19 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	link, err := createLink(url)
+	link, err := createLink(url, req)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Invalid parameter: url", http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Your short url: %s\n", link.shortened(req))
+	msg := "Your short url (created without account): %s\n"
+	if link.AccountID != 0 {
+		msg = "Your short url (created for account): %s\n"
+	}
+	fmt.Fprintf(w, msg, link.shortened(req))
 }
 
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
