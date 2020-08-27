@@ -25,7 +25,7 @@ Without account:
 `curl -X POST https://earlurl.herokuapp.com/links -d
 "url=https://jonathanthom.com"`
 
-### Inspect Links (only works with account)
+### Inspect Links & Views (only works with account)
 `curl https://earlurl.herokuapp.com/links -H "Authorization: basic
 token-from-account-creation"`
 
