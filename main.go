@@ -239,6 +239,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	url := link.Original
 
 	// @todo: More logging
+	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
 	view := &View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
 	// handle errors
 	db.Create(view)
