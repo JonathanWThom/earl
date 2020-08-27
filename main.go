@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 // @todo: Add caching
@@ -41,6 +42,7 @@ func main() {
 	defer db.Close()
 	db.AutoMigrate(&Link{})
 	db.AutoMigrate(&Account{})
+	db.AutoMigrate(&View{})
 
 	r := mux.NewRouter()
 
@@ -63,11 +65,15 @@ type Link struct {
 	Original   string `gorm:"not null" json:"original""`
 	Identifier string `gorm:"unique;not null" json:"identifier"`
 	AccountID  uint   `json:"-"`
+	Views      []View `json:"views"`
 }
 
 type View struct {
-	gorm.Model `json:"-"`
-	LinkID     uint `json:"-"`
+	ID        uint       `gorm:"primary_key" json:"-"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"-"`
+	DeletedAt *time.Time `sql:"index" json:"-"`
+	LinkID    uint       `json:"-"`
 }
 
 type Account struct {
@@ -113,7 +119,7 @@ func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	links := []Link{}
-	err := db.Where("account_id = ?", account.ID).Find(&links).Error
+	err := db.Where("account_id = ?", account.ID).Preload("Views").Find(&links).Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Unable to fetch links")
@@ -231,7 +237,10 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	url := link.Original
 
-	// @todo: Log things for user that the link belongs to
+	// @todo: More logging
+	view := &View{LinkID: link.ID}
+	// handle errors
+	db.Create(view)
 
 	http.Redirect(w, req, url, 302)
 }
