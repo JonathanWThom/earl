@@ -37,12 +37,14 @@ func main() {
 	db.LogMode(true)
 	defer db.Close()
 	db.AutoMigrate(&Link{})
+	db.AutoMigrate(&Account{})
 
 	r := mux.NewRouter()
 
 	// @todo: Add generic logging middleware around routes
 	r.HandleFunc("/{identifier}", getLinkHandler).Methods("GET")
 	r.HandleFunc("/links", createLinkHandler).Methods("POST")
+	r.HandleFunc("/accounts", createAccountHandler).Methods("POST")
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -55,6 +57,31 @@ type Link struct {
 	gorm.Model
 	Original   string `gorm:"not null"`
 	Identifier string `gorm:"unique;not null"`
+	AccountID  uint
+}
+
+type Account struct {
+	gorm.Model
+	Token string `gorm:"unique;not null"`
+	Links []Link
+}
+
+func createAccountHandler(w http.ResponseWriter, req *http.Request) {
+	token, err := gonanoid.Nanoid()
+	if err != nil {
+		http.Error(w, "Unable to create account", http.StatusInternalServerError)
+		return
+	}
+	account := &Account{Token: token}
+
+	err = db.Create(account).Error
+	if err != nil {
+		http.Error(w, "Unable to create account", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "Your account token: %s. Pass token as Authorization header: `bearer your-token-goes-here`\n", account.Token)
 }
 
 func createLink(original string) (*Link, error) {
