@@ -69,11 +69,12 @@ type Link struct {
 }
 
 type View struct {
-	ID        uint       `gorm:"primary_key" json:"-"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"-"`
-	DeletedAt *time.Time `sql:"index" json:"-"`
-	LinkID    uint       `json:"-"`
+	ID         uint       `gorm:"primary_key" json:"-"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"-"`
+	DeletedAt  *time.Time `sql:"index" json:"-"`
+	LinkID     uint       `json:"-"`
+	RemoteAddr string     `json:"remoteAddr"`
 }
 
 type Account struct {
@@ -238,7 +239,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	url := link.Original
 
 	// @todo: More logging
-	view := &View{LinkID: link.ID}
+	view := &View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
 	// handle errors
 	db.Create(view)
 
