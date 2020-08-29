@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jonathanwthom/earl/models"
+	"log"
 	"net/http"
 )
 
@@ -27,6 +28,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	view := &models.View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
 	err := db.Create(view).Error
 	if err != nil {
+		log.Print(err)
 		http.Error(w, "Unable to redirect to link", http.StatusInternalServerError)
 	}
 

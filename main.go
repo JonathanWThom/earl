@@ -8,7 +8,6 @@ import (
 
 // @todo: Add caching
 // @todo: Add linter tool
-// @todo: Return consistent json responses
 
 func main() {
 	godotenv.Load()

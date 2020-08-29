@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/matoous/go-nanoid"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -20,6 +21,7 @@ type Link struct {
 func (link *Link) Shorten(req *http.Request) error {
 	identifier, err := gonanoid.ID(6)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 
@@ -33,11 +35,13 @@ func (link *Link) Validate() error {
 	original := link.Original
 	_, err := url.ParseRequestURI(original)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 
 	u, err := url.Parse(original)
 	if err != nil || u.Scheme == "" || u.Host == "" {
+		log.Print(err)
 		return err
 	}
 

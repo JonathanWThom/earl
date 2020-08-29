@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/jonathanwthom/earl/models"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -18,12 +19,14 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	link, err := createLink(url, req)
 	if err != nil {
+		log.Print(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	js, err := json.Marshal(link)
 	if err != nil {
+		log.Print(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -49,16 +52,19 @@ func createLink(original string, req *http.Request) (*models.Link, error) {
 
 	err := link.Validate()
 	if err != nil {
+		log.Print(err)
 		return link, errors.New("Invalid parameter: url")
 	}
 
 	err = link.Shorten(req)
 	if err != nil {
+		log.Print(err)
 		return link, errors.New("Unable to create link")
 	}
 
 	err = db.Create(link).Error
 	if err != nil {
+		log.Print(err)
 		return link, errors.New("Unable to create link")
 	}
 
