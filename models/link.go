@@ -12,7 +12,7 @@ import (
 type Link struct {
 	gorm.Model `json:"-"`
 	Original   string `gorm:"not null" json:"original""`
-	Identifier string `gorm:"unique;not null"`
+	Identifier string `gorm:"unique;not null" json:"-"`
 	Shortened  string `gorm:"unique" json:"shortened"`
 	AccountID  uint   `json:"-"`
 	Views      []View `json:"views"`

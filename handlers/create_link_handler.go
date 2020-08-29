@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/jonathanwthom/earl/models"
 	"net/http"
 	"strings"
@@ -19,17 +19,17 @@ func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	link, err := createLink(url, req)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Invalid parameter: url", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	msg := "Your short url (created without account): %s\n"
-	if link.AccountID != 0 {
-		msg = "Your short url (created for account): %s\n"
+	js, err := json.Marshal(link)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	fmt.Fprintf(w, msg, link.Shortened)
+	w.WriteHeader(http.StatusOK)
+	w.Write(js)
 }
 
 func createLink(original string, req *http.Request) (*models.Link, error) {
@@ -50,17 +50,17 @@ func createLink(original string, req *http.Request) (*models.Link, error) {
 
 	err := link.Validate()
 	if err != nil {
-		return link, err
+		return link, errors.New("Invalid parameter: url")
 	}
 
 	err = link.Shorten(req)
 	if err != nil {
-		return link, err
+		return link, errors.New("Unable to create link")
 	}
 
 	err = db.Create(link).Error
 	if err != nil {
-		return link, err
+		return link, errors.New("Unable to create link")
 	}
 
 	return link, nil
