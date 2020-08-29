@@ -5,7 +5,7 @@ import (
 )
 
 type Account struct {
-	gorm.Model
-	Token string `gorm:"unique;not null"`
-	Links []Link
+	gorm.Model `json:"-"`
+	Token      string `gorm:"unique;not null" json:"token"`
+	Links      []Link `json:"-"`
 }

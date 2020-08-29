@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
-	"fmt"
+	"encoding/json"
 	"github.com/jonathanwthom/earl/models"
 	"github.com/matoous/go-nanoid"
 	"net/http"
@@ -24,6 +24,11 @@ func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	js, err := json.Marshal(account)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Your account token is: %s\n", account.Token)
+	w.Write(js)
 }
