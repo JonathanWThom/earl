@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// return json
 func createLinkHandler(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	url := req.FormValue("url")

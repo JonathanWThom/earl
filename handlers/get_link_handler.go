@@ -23,9 +23,12 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	// @todo: More logging
 	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
+	// Could this also be done concurrently with redirect?
 	view := &models.View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
-	// handle errors
-	db.Create(view)
+	err := db.Create(view).Error
+	if err != nil {
+		http.Error(w, "Unable to redirect to link", http.StatusInternalServerError)
+	}
 
 	http.Redirect(w, req, url, 302)
 }

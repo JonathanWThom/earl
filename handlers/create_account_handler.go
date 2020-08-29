@@ -8,7 +8,6 @@ import (
 	"net/http"
 )
 
-// need to return json
 func createAccountHandler(w http.ResponseWriter, req *http.Request) {
 	id, err := gonanoid.Nanoid()
 	token := base64.StdEncoding.EncodeToString([]byte(id))

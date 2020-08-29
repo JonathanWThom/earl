@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/matoous/go-nanoid"
@@ -34,12 +33,12 @@ func (link *Link) Validate() error {
 	original := link.Original
 	_, err := url.ParseRequestURI(original)
 	if err != nil {
-		return errors.New("Invalid URL")
+		return err
 	}
 
 	u, err := url.Parse(original)
 	if err != nil || u.Scheme == "" || u.Host == "" {
-		return errors.New("Invalid URL")
+		return err
 	}
 
 	// @todo: Could also try a GET request on link to make sure it exists
