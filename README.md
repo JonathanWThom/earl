@@ -58,7 +58,7 @@ curl https://earlurl.herokuapp.com/links \
 
 Example response:
 ```
-[{"original":"https://jonathanthom.com","shortened":"https://earlurl.herokuapp.com/R-KMIa","views":[{"createdAt":"2020-08-29T21:42:56.706419Z","remoteAddr":"xx.xx.xxx.xxx:12345"}]}]
+[{"original":"https://jonathanthom.com","shortened":"https://earlurl.herokuapp.com/R-KMIa","views":[{"createdAt":"2020-08-29T21:42:56.706419Z","referer":"","country":"United States of America","city":"Bellingham","zipCode":"98225"}]}]
 ```
 
 ### Visit Link
