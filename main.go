@@ -8,6 +8,8 @@ import (
 
 // @todo: Add caching
 // @todo: Add linter tool
+// @todo: Add payment, account inspection
+// @todo: Add tags/meta for links and queries based on tags
 
 func main() {
 	godotenv.Load()
