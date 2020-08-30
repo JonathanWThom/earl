@@ -53,18 +53,16 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 func getLocationFromIP(req *http.Request) (models.Location, error) {
 	// This is need for Heroku, since it uses proxies
 	ip := req.Header.Get("X-FORWARDED-FOR")
+	fmt.Println("<<<<<<<<<<<<<<<<<<<< IP >>>>>>>>>>>>>>")
+	fmt.Println(ip)
 	location := models.Location{}
-	dec, err := ip2int(ip)
-	if err != nil {
-		return location, err
-
-	}
-	err = db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
+	dec := ip2int(ip)
+	err := db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
 
 	return location, err
 }
 
-func ip2int(raw string) (uint32, error) {
+func ip2int(raw string) uint32 {
 	ip := net.ParseIP(raw)
-	return binary.BigEndian.Uint32([]byte(ip)), nil
+	return binary.BigEndian.Uint32([]byte(ip))
 }
