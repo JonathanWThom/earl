@@ -51,11 +51,11 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func getLocationFromIP(rawIP string) (models.Location, error) {
-	dec := ip2int(rawIP)
+	//dec := ip2int(rawIP)
 	location := models.Location{}
-	err := db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
+	//err := db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
 
-	return location, err
+	return location, nil
 }
 
 func ip2int(raw string) uint32 {
