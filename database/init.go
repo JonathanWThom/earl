@@ -23,6 +23,7 @@ func Init() *gorm.DB {
 	db.AutoMigrate(&models.Link{})
 	db.AutoMigrate(&models.Account{})
 	db.AutoMigrate(&models.View{})
+	db.AutoMigrate(&models.Location{})
 
 	return db
 }
