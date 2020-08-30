@@ -28,7 +28,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
 	// Could this also be done concurrently with redirect?
 
-	location, err := getLocationFromIP(req.RemoteAddr)
+	location, err := getLocationFromIP(req)
 	if err != nil {
 		log.Print(err)
 	}
@@ -51,7 +51,8 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, url, 302)
 }
 
-func getLocationFromIP(rawIP string) (models.Location, error) {
+func getLocationFromIP(req *http.Request) (models.Location, error) {
+	rawIP := getIP(req)
 	location := models.Location{}
 	dec, err := ip2int(rawIP)
 	if err != nil {
@@ -70,4 +71,12 @@ func ip2int(raw string) (uint32, error) {
 	}
 
 	return binary.BigEndian.Uint32([]byte(ip)), nil
+}
+
+func getIP(r *http.Request) string {
+	forwarded := r.Header.Get("X-FORWARDED-FOR")
+	if forwarded != "" {
+		return forwarded
+	}
+	return r.RemoteAddr
 }
