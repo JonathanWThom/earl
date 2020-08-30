@@ -32,7 +32,6 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print(err)
 	}
-	log.Print(location)
 
 	view := &models.View{
 		LinkID:     link.ID,
@@ -51,18 +50,22 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func getLocationFromIP(rawIP string) (models.Location, error) {
-	//dec := ip2int(rawIP)
 	location := models.Location{}
-	//err := db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
+	dec, err := ip2int(rawIP)
+	if err != nil {
+		return location, err
 
-	return location, nil
+	}
+	err = db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
+
+	return location, err
 }
 
-func ip2int(raw string) uint32 {
-	fmt.Println(raw)
-	ip := net.ParseIP(raw)
-	if len(ip) == 16 {
-		return binary.BigEndian.Uint32(ip[12:16])
+func ip2int(raw string) (uint32, error) {
+	ip, _, err := net.SplitHostPort(raw)
+	if err != nil {
+		return 0, err
 	}
-	return binary.BigEndian.Uint32(ip)
+
+	return binary.BigEndian.Uint32([]byte(ip)), nil
 }
