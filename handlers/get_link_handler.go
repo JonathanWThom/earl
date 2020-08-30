@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"encoding/binary"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jonathanwthom/earl/models"
 	"log"
+	"math/big"
+	"net"
 	"net/http"
 )
 
@@ -52,11 +53,15 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 func getLocationFromIP(req *http.Request) (models.Location, error) {
 	// This is need for Heroku, since it uses proxies
 	ip := req.Header.Get("X-FORWARDED-FOR")
-	fmt.Println("<<<<<<<<<<<<<<<<< IP >>>>>>>>>>>>>")
-	fmt.Println(ip)
+	dec := IP4toInt(net.ParseIP(ip))
 	location := models.Location{}
-	dec := binary.BigEndian.Uint32([]byte(ip))
 	err := db.Where("ip_from <= ? and ip_to >= ?", dec, dec).First(&location).Error
 
 	return location, err
+}
+
+func IP4toInt(IPv4Address net.IP) int64 {
+	IPv4Int := big.NewInt(0)
+	IPv4Int.SetBytes(IPv4Address.To4())
+	return IPv4Int.Int64()
 }
