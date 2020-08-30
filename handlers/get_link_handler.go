@@ -34,13 +34,12 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	view := &models.View{
-		LinkID:     link.ID,
-		RemoteAddr: req.RemoteAddr,
-		UserAgent:  req.UserAgent(),
-		Referer:    req.Referer(),
-		Country:    location.CountryName,
-		City:       location.CityName,
-		ZipCode:    location.ZipCode,
+		LinkID:    link.ID,
+		UserAgent: req.UserAgent(),
+		Referer:   req.Referer(),
+		Country:   location.CountryName,
+		City:      location.CityName,
+		ZipCode:   location.ZipCode,
 	}
 	err = db.Create(view).Error
 	if err != nil {
@@ -52,11 +51,10 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func getLocationFromIP(req *http.Request) (models.Location, error) {
-	rawIP := getIP(req)
-	fmt.Println("<<<<<<<<<<<<<<<<<<< IP >>>>>>>>>>>>>>>>>")
-	fmt.Println(rawIP)
+	// This is need for Heroku, since it uses proxies
+	ip := req.Header.Get("X-FORWARDED-FOR")
 	location := models.Location{}
-	dec, err := ip2int(rawIP)
+	dec, err := ip2int(ip)
 	if err != nil {
 		return location, err
 
@@ -67,18 +65,6 @@ func getLocationFromIP(req *http.Request) (models.Location, error) {
 }
 
 func ip2int(raw string) (uint32, error) {
-	ip, _, err := net.SplitHostPort(raw)
-	if err != nil {
-		return 0, err
-	}
-
+	ip := net.ParseIP(raw)
 	return binary.BigEndian.Uint32([]byte(ip)), nil
-}
-
-func getIP(r *http.Request) string {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
-	}
-	return r.RemoteAddr
 }
