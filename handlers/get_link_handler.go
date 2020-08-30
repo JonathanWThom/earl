@@ -25,7 +25,13 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	// @todo: More logging
 	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
 	// Could this also be done concurrently with redirect?
-	view := &models.View{LinkID: link.ID, RemoteAddr: req.RemoteAddr}
+	fmt.Println(req)
+	view := &models.View{
+		LinkID:     link.ID,
+		RemoteAddr: req.RemoteAddr,
+		UserAgent:  req.UserAgent(),
+		Referer:    req.Referer(),
+	}
 	err := db.Create(view).Error
 	if err != nil {
 		log.Print(err)

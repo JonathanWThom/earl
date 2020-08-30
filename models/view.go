@@ -9,4 +9,6 @@ type View struct {
 	DeletedAt  *time.Time `sql:"index" json:"-"`
 	LinkID     uint       `json:"-"`
 	RemoteAddr string     `json:"remoteAddr"`
+	UserAgent  string     `json:"userAgent"`
+	Referer    string     `json:"referer"`
 }
