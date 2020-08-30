@@ -11,5 +11,7 @@ type View struct {
 	RemoteAddr string     `json:"remoteAddr"`
 	UserAgent  string     `json:"userAgent"`
 	Referer    string     `json:"referer"`
-	Location   Location   `json:"location"`
+	Country    string     `json:"country"`
+	City       string     `json:"city"`
+	ZipCode    string     `json:"zipCode"`
 }

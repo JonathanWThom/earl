@@ -38,7 +38,9 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 		RemoteAddr: req.RemoteAddr,
 		UserAgent:  req.UserAgent(),
 		Referer:    req.Referer(),
-		Location:   location,
+		Country:    location.CountryName,
+		City:       location.CityName,
+		ZipCode:    location.ZipCode,
 	}
 	err = db.Create(view).Error
 	if err != nil {
