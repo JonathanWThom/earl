@@ -53,6 +53,8 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 func getLocationFromIP(req *http.Request) (models.Location, error) {
 	rawIP := getIP(req)
+	fmt.Println("<<<<<<<<<<<<<<<<<<< IP >>>>>>>>>>>>>>>>>")
+	fmt.Println(rawIP)
 	location := models.Location{}
 	dec, err := ip2int(rawIP)
 	if err != nil {
