@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jonathanwthom/earl/models"
 	"log"
-	"net"
 	"net/http"
 )
 
