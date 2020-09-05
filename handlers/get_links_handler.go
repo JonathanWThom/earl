@@ -10,6 +10,7 @@ import (
 )
 
 func getLinksHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Println(req)
 	// share header fetch code
 	auth := req.Header.Get("Authorization")
 	account := &models.Account{}

@@ -8,4 +8,5 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.3.0
 	github.com/matoous/go-nanoid v1.4.1
+	github.com/rs/cors v1.7.0
 )
