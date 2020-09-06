@@ -24,28 +24,26 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 
 	url := link.Original
 
-	// @todo: More logging
-	// could log things about remote ip with https://godoc.org/github.com/oschwald/geoip2-golang
-	// Could this also be done concurrently with redirect?
+	// @todo: Break this out
+	go func() {
+		location, err := getLocationFromIP(req)
+		if err != nil {
+			log.Print(err)
+		}
 
-	location, err := getLocationFromIP(req)
-	if err != nil {
-		log.Print(err)
-	}
-
-	view := &models.View{
-		LinkID:    link.ID,
-		UserAgent: req.UserAgent(),
-		Referer:   req.Referer(),
-		Country:   location.CountryName,
-		City:      location.CityName,
-		ZipCode:   location.ZipCode,
-	}
-	err = db.Create(view).Error
-	if err != nil {
-		log.Print(err)
-		http.Error(w, "Unable to redirect to link", http.StatusInternalServerError)
-	}
+		view := &models.View{
+			LinkID:    link.ID,
+			UserAgent: req.UserAgent(),
+			Referer:   req.Referer(),
+			Country:   location.CountryName,
+			City:      location.CityName,
+			ZipCode:   location.ZipCode,
+		}
+		err = db.Create(view).Error
+		if err != nil {
+			log.Print(err)
+		}
+	}()
 
 	http.Redirect(w, req, url, 302)
 }
