@@ -1,6 +1,27 @@
 <!DOCTYPE>
 <html>
     <head>
+       <style>
+          table,
+          th,
+          td {
+            padding: 10px;
+            border: 1px solid black;
+            border-collapse: collapse;
+            max-width: 100vw;
+          }
+
+          table {
+              margin: 10px 0;
+          }
+
+          .truncated {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+        </style>
+
     </head>
     <body>
         <div id="error"></div>
@@ -39,7 +60,7 @@
                 const linkHTML = links.map(link => {
                     return `
                         <tr>
-                            <td><a href=${ link.original }>${ link.original
+                            <td class="truncated"><a href=${ link.original }>${ link.original
                             }</a></td>
                             <td><a href=${ link.shortened }>${ link.shortened
                             }</a></td>
@@ -106,8 +127,9 @@
                     `;
                 }).join("");
                 const details = `
-                    <h5>Details for ${ link.shortened }. <a href=""
-                    id="toggle-link-details">Hide details</a></h5>
+                    <h3>Details for ${ link.shortened }</h3>
+                    <a href="" id="toggle-link-details">Hide
+                details</a>
                     <table>
                         <tr>
                             <th>Viewed At</th>
