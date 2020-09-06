@@ -95,12 +95,14 @@
                 }).join("");
 
                 root.innerHTML = `
+                    <h3>Create Link</h3>
                     <form id="create-link">
                         <input placeholder="URL" type="url" id="url" required name="url" />
                         <br/>
                         <input id="create-link-submit" type="submit" value="Create Short Link" />
                     </form>
                     <div id="active-views"></div>
+                    <h3>Links</h3>
                     <table>
                         <tr>
                             <th>Original</th>
@@ -151,7 +153,7 @@
                     `;
                 }).join("");
                 const details = `
-                    <h3>Details for ${ link.shortened }</h3>
+                    <h3>Details for: ${ link.shortened }</h3>
                     <a href="" id="toggle-link-details">Hide
                 details</a>
                     <table>
