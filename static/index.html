@@ -28,10 +28,15 @@
 
           .flex {
             display: flex;
+            align-items: center;
           }
 
           .flex-right {
             margin-left: auto;
+          }
+
+          .flex-center {
+            align-self: center;
           }
         </style>
 
@@ -39,6 +44,7 @@
     <body>
         <header class="flex">
             <h1>Earl</h1>
+            <div id="token-wrapper" class="flex-right"></div>
             <div id="logout-wrapper" class="flex-right"></div>
         </header>
         <div id="error"></div>
@@ -49,6 +55,7 @@
             const root = document.getElementById("root");
             const error = document.getElementById("error")
             const logoutWrapper = document.getElementById("logout-wrapper");
+            const tokenWrapper = document.getElementById("token-wrapper");
             let createAccountForm;
             let createAccountSubmit;
             let loginForm;
@@ -88,7 +95,6 @@
                 }).join("");
 
                 root.innerHTML = `
-                    <h3>Account Token: ${token}</h3>
                     <form id="create-link">
                         <input placeholder="URL" type="url" id="url" required name="url" />
                         <br/>
@@ -106,6 +112,7 @@
                 `
 
                 logoutWrapper.innerHTML = `<button id="logout">Logout</button>`;
+                tokenWrapper.innerText = `Account Token: ${token}`;
                 const createLinkForm = document.getElementById("create-link");
                 createLinkSubmit =
                     document.getElementById("create-link-submit");
