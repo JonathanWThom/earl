@@ -42,7 +42,7 @@
                     return `
                         <td>
                             <a data-link-details=${link.shortened}
-                            href="#${link.shortened}">
+                            href="">
                                 ${link.views.length}
                             </a>
                         </td>
@@ -103,12 +103,13 @@
                 });
                 const logout = document.getElementById("logout");
                 logout.addEventListener("click", () => {
-                    sessionStorage.removeItem("token", null);
+                    localStorage.removeItem("token", null);
                     window.location.href = "";
                 });
             }
 
             const showLinkDetails = (event) => {
+                event.preventDefault();
                 const shortened = event.target.dataset.linkDetails
                 const link = links.find(link => {
                     return link.shortened === shortened;
@@ -199,7 +200,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     token = data.token;
-                    sessionStorage.setItem("token", data.token);
+                    localStorage.setItem("token", data.token);
                     renderError("");
                     return renderAccount();
                 }
@@ -232,7 +233,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     links = data;
-                    sessionStorage.setItem("token", token);
+                    localStorage.setItem("token", token);
                     renderError("");
                     return renderAccount(data);
                 }
@@ -267,8 +268,8 @@
             }
 
             const checkToken = () => {
-                if (sessionStorage.getItem("token") !== null) {
-                    token = sessionStorage.getItem("token");
+                if (localStorage.getItem("token") !== null) {
+                    token = localStorage.getItem("token");
                     getLinks(token).then(response => {
                         if (response.ok) {
                             response.json().then(data => {
