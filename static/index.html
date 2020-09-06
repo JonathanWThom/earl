@@ -5,26 +5,14 @@
     <body>
         <div id="error"></div>
         <div id="root">
-            <h3>Create Account</h3>
-            <form id="create-account">
-                 <input id="create-account-submit" type="submit" value="Create Account" />
-            </form>
-
-            <h3>Login</h3>
-            <form id="login">
-                <label for="token">Account Token:</label><br>
-                <input type="text" id="token" name="token" required><br>
-                <input id="login-submit" type="submit" value="Login" />
-            </form>
         </div>
 
         <script type="text/javascript">
             const root = document.getElementById("root");
-            const createAccountForm = document.getElementById("create-account");
-            const createAccountSubmit =
-                document.getElementById("create-account-submit");
-            const loginForm = document.getElementById("login");
-            const loginSubmit = document.getElementById("login-submit");
+            let createAccountForm;
+            let createAccountSubmit;
+            let loginForm;
+            let loginSubmit;
             let createLinkSubmit;
             let links = [];
 
@@ -232,8 +220,29 @@
                 renderError("Unable to login")
             }
 
-            createAccountForm.addEventListener("submit", createAccount) 
-            loginForm.addEventListener("submit", login) 
+            const renderDefault = () => {
+                root.innerHTML = `
+                    <h3>Create Account</h3>
+                    <form id="create-account">
+                         <input id="create-account-submit" type="submit" value="Create Account" />
+                    </form>
+
+                    <h3>Login</h3>
+                    <form id="login">
+                        <label for="token">Account Token:</label><br>
+                        <input type="text" id="token" name="token" required><br>
+                        <input id="login-submit" type="submit" value="Login" />
+                    </form>
+                `;
+
+                createAccountForm = document.getElementById("create-account");
+                createAccountSubmit =
+                    document.getElementById("create-account-submit");
+                loginForm = document.getElementById("login");
+                loginSubmit = document.getElementById("login-submit");
+                createAccountForm.addEventListener("submit", createAccount) 
+                loginForm.addEventListener("submit", login) 
+            }
 
             const checkToken = () => {
                 if (sessionStorage.getItem("token") !== null) {
@@ -247,8 +256,11 @@
                         } else {
                             console.error(response)
                             renderError("Unable to access account")
+                            renderDefault();
                         }
                     });
+                } else {
+                    renderDefault();
                 }
             }
 
