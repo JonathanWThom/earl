@@ -28,6 +28,25 @@
             let createLinkSubmit;
             let links = [];
 
+            const renderViewsLink = (link) => {
+                if (link.views && link.views.length) {
+                    return `
+                        <td>
+                            <a data-link-details=${link.shortened}
+                            href="#${link.shortened}">
+                                ${link.views.length}
+                            </a>
+                        </td>
+                    `;
+                } else {
+                    return `
+                        <td>
+                            0
+                        </td>
+                    `;
+                }
+            }
+
             const renderAccount = () => {
                 const linkHTML = links.map(link => {
                     return `
@@ -36,9 +55,7 @@
                             }</a></td>
                             <td><a href=${ link.shortened }>${ link.shortened
                             }</a></td>
-                            <td><a data-link-details=${link.shortened}
-                            href="#${link.shortened}">${
-                            (link.views && link.views.length) || 0 }</a></td>
+                            ${ renderViewsLink(link) }
                         </tr>`;
                 }).join("");
 
@@ -101,7 +118,8 @@
                     `;
                 }).join("");
                 const details = `
-                    <h5><a href="" id="toggle-link-details">${ link.shortened }</a></h5>
+                    <h5>Details for ${ link.shortened }. <a href=""
+                    id="toggle-link-details">Hide details</a></h5>
                     <table>
                         <tr>
                             <th>Viewed At</th>
