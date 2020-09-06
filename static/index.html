@@ -1,6 +1,11 @@
 <!DOCTYPE>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Earl</title>
+        <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
        <style>
           table,
           th,
@@ -24,12 +29,14 @@
 
     </head>
     <body>
+        <header><h1>Earl</h1></header>
         <div id="error"></div>
         <div id="root">
         </div>
 
         <script type="text/javascript">
             const root = document.getElementById("root");
+            const error = document.getElementById("error")
             let createAccountForm;
             let createAccountSubmit;
             let loginForm;
@@ -186,8 +193,8 @@
                 createLinkSubmit.disabled = false;
             }
 
-            const renderError = (error) => {
-                error.innerHTML = error;
+            const renderError = (msg) => {
+                error.innerText = msg;
             }
 
             const createAccount = async (event) => {
