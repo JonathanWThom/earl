@@ -1,0 +1,240 @@
+<!DOCTYPE>
+<html>
+    <head>
+    </head>
+    <body>
+        <div id="error"></div>
+        <div id="root">
+            <h3>Create Account</h3>
+            <form id="create-account">
+                 <input id="create-account-submit" type="submit" value="Create Account" />
+            </form>
+
+            <h3>Login</h3>
+            <form id="login">
+                <label for="token">Account Token:</label><br>
+                <input type="text" id="token" name="token" required><br>
+                <input id="login-submit" type="submit" value="Login" />
+            </form>
+        </div>
+
+        <script type="text/javascript">
+            const root = document.getElementById("root");
+            const createAccountForm = document.getElementById("create-account");
+            const createAccountSubmit =
+                document.getElementById("create-account-submit");
+            const loginForm = document.getElementById("login");
+            const loginSubmit = document.getElementById("login-submit");
+            let createLinkSubmit;
+            let links = [];
+
+            const renderAccount = () => {
+                const linkHTML = links.map(link => {
+                    return `
+                        <tr>
+                            <td><a href=${ link.original }>${ link.original
+                            }</a></td>
+                            <td><a href=${ link.shortened }>${ link.shortened
+                            }</a></td>
+                            <td><a data-link-details=${link.shortened}
+                            href="#${link.shortened}">${
+                            (link.views && link.views.length) || 0 }</a></td>
+                        </tr>`;
+                }).join("");
+
+                root.innerHTML = `
+                    <h3>Account Token: ${token}</h3>
+                    <form id="create-link">
+                        <label for="url">URL:</label><br>
+                        <input type="url" id="url" required name="url" />
+                        <br/>
+                        <input id="create-link-submit" type="submit" value="Create Short Link" />
+                    </form>
+                    <div id='active-views'></div>
+                    <table>
+                        <tr>
+                            <th>Original</th>
+                            <th>Shortened</th>
+                            <th>Views</th>
+                        </tr>
+                        ${ linkHTML }
+                    </table>
+                    <div>
+                        <button id="logout">Logout</button>
+                    </div>
+                `
+
+                const createLinkForm = document.getElementById("create-link");
+                createLinkSubmit =
+                    document.getElementById("create-link-submit");
+
+                createLinkForm.addEventListener("submit", createLink);
+                const viewLinks =
+                    document.querySelectorAll("[data-link-details]");
+
+                viewLinks.forEach(link => {
+                    link.addEventListener("click", showLinkDetails);
+                });
+                const logout = document.getElementById("logout");
+                logout.addEventListener("click", () => {
+                    sessionStorage.removeItem("token", null);
+                    window.location.href = "";
+                });
+            }
+
+            const showLinkDetails = (event) => {
+                const shortened = event.target.dataset.linkDetails
+                const link = links.find(link => {
+                    return link.shortened === shortened;
+                });
+                const activeViews = document.getElementById("active-views");
+                const views = link.views.map(view => {
+                    return `
+                        <tr>
+                            <td>${ view.createdAt }</td>
+                            <td>${ view.city }</td>
+                            <td>${ view.zipCode }</td>
+                            <td>${ view.country }</td>
+                            <td>${ view.userAgent }</td>
+                            <td>${ view.referer }</td>
+                        </tr>
+                    `;
+                }).join("");
+                const details = `
+                    <h5><a href="" id="toggle-link-details">${ link.shortened }</a></h5>
+                    <table>
+                        <tr>
+                            <th>Viewed At</th>
+                            <th>City</th>
+                            <th>Zip Code</th>
+                            <th>Country</th>
+                            <th>User Agent</th>
+                            <th>Referrer</th>
+                        </tr>
+                        <tr>
+                            ${ views }
+                        </tr>
+                    </table>
+                `;
+                activeViews.innerHTML = details;
+
+                const toggle = document.getElementById("toggle-link-details")
+                toggle.addEventListener("click", (event) => {
+                   event.preventDefault();
+                   activeViews.innerHTML = "";
+                })
+            }
+
+            const createLink = async (event) => {
+                event.preventDefault();
+                createLinkSubmit.disabled = true;
+                const formData = new FormData(event.target);
+
+                let url;
+                for (var value of formData.values()) {
+                    url = value;
+                }
+
+                const response = await fetch(
+                    `/links?url=${url}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `basic ${token}`
+                        },
+                    }
+                )
+                if (response.ok) {
+                    const data = await response.json();
+                    links.push(data);
+                    renderError("");
+                    renderAccount();
+                } else {
+                    console.error(response);
+                    renderError("Unable to create link");
+                }
+
+                createLinkSubmit.disabled = false;
+            }
+
+            const renderError = (error) => {
+                error.innerHTML = error;
+            }
+
+            const createAccount = async (event) => {
+                event.preventDefault();
+                createAccountSubmit.disabled = true;
+                const response = await fetch(
+                    "/accounts", 
+                    { method: "POST" },
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.token;
+                    sessionStorage.setItem("token", data.token);
+                    renderError("");
+                    return renderAccount();
+                }
+
+                console.error(response)
+                createAccountSubmit.disabled = false;
+                renderError("Unable to create account")
+            }
+
+            const getLinks = async (token) => {
+                return await fetch(
+                    "/links", 
+                    { 
+                        method: "GET",
+                        headers: {
+                            "Authorization": `basic ${token}`
+                        }
+                    },
+                );
+            }
+
+            const login = async (event) => {
+                event.preventDefault();
+                loginSubmit.disabled = true;
+                const formData = new FormData(event.target);
+                for (let value of formData.values()) {
+                  token = value;
+                }
+                const response = await getLinks(token);
+                if (response.ok) {
+                    const data = await response.json();
+                    links = data;
+                    sessionStorage.setItem("token", token);
+                    renderError("");
+                    return renderAccount(data);
+                }
+
+                console.error(response)
+                loginSubmit.disabled = false;
+                renderError("Unable to login")
+            }
+
+            createAccountForm.addEventListener("submit", createAccount) 
+            loginForm.addEventListener("submit", login) 
+
+            const checkToken = () => {
+                if (sessionStorage.getItem("token") !== null) {
+                    token = sessionStorage.getItem("token");
+                    getLinks(token).then(response => {
+                        if (response.ok) {
+                            response.json().then(data => {
+                                links = data;
+                                return renderAccount();
+                            })
+                        } else {
+                            console.error(response)
+                            renderError("Unable to access account")
+                        }
+                    });
+                }
+            }
+
+            checkToken();
+        </script>
+    </body>
+</html>

@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/jonathanwthom/earl/handlers"
-	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +15,10 @@ func Init(db *gorm.DB) {
 	h := handlers.Init(db)
 
 	// Order matters
+	r.Handle(
+		"/",
+		http.FileServer(http.Dir("./static")),
+	)
 	r.Handle(
 		"/links", middleware.LoggingHandler(os.Stdout, http.HandlerFunc(h.GetLinksHandler)),
 	).Methods("GET")
@@ -36,14 +39,6 @@ func Init(db *gorm.DB) {
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedHeaders: []string{"Authorization"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-		// Enable Debugging for testing, consider disabling in production
-		Debug: true,
-	})
 
-	handler := c.Handler(r)
-	http.ListenAndServe(":"+port, handler)
+	http.ListenAndServe(":"+port, r)
 }
