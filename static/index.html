@@ -25,11 +25,22 @@
             white-space: nowrap;
             overflow: hidden;
           }
+
+          .flex {
+            display: flex;
+          }
+
+          .flex-right {
+            margin-left: auto;
+          }
         </style>
 
     </head>
     <body>
-        <header><h1>Earl</h1></header>
+        <header class="flex">
+            <h1>Earl</h1>
+            <div id="logout-wrapper" class="flex-right"></div>
+        </header>
         <div id="error"></div>
         <div id="root">
         </div>
@@ -37,6 +48,7 @@
         <script type="text/javascript">
             const root = document.getElementById("root");
             const error = document.getElementById("error")
+            const logoutWrapper = document.getElementById("logout-wrapper");
             let createAccountForm;
             let createAccountSubmit;
             let loginForm;
@@ -78,12 +90,11 @@
                 root.innerHTML = `
                     <h3>Account Token: ${token}</h3>
                     <form id="create-link">
-                        <label for="url">URL:</label><br>
-                        <input type="url" id="url" required name="url" />
+                        <input placeholder="URL" type="url" id="url" required name="url" />
                         <br/>
                         <input id="create-link-submit" type="submit" value="Create Short Link" />
                     </form>
-                    <div id='active-views'></div>
+                    <div id="active-views"></div>
                     <table>
                         <tr>
                             <th>Original</th>
@@ -92,11 +103,9 @@
                         </tr>
                         ${ linkHTML }
                     </table>
-                    <div>
-                        <button id="logout">Logout</button>
-                    </div>
                 `
 
+                logoutWrapper.innerHTML = `<button id="logout">Logout</button>`;
                 const createLinkForm = document.getElementById("create-link");
                 createLinkSubmit =
                     document.getElementById("create-link-submit");
@@ -259,8 +268,7 @@
 
                     <h3>Login</h3>
                     <form id="login">
-                        <label for="token">Account Token:</label><br>
-                        <input type="text" id="token" name="token" required><br>
+                        <input placeholder="Account Token" type="text" id="token" name="token" required><br>
                         <input id="login-submit" type="submit" value="Login" />
                     </form>
                 `;
