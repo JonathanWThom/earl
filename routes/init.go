@@ -34,6 +34,10 @@ func Init(db *gorm.DB) {
 		"/accounts",
 		middleware.LoggingHandler(os.Stdout, http.HandlerFunc(h.CreateAccountHandler)),
 	).Methods("POST")
+	r.Handle(
+		"/payments",
+		middleware.LoggingHandler(os.Stdout, http.HandlerFunc(h.CreatePaymentHandler)),
+	).Methods("POST")
 
 	port := os.Getenv("PORT")
 	if port == "" {

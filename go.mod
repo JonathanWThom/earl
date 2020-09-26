@@ -3,6 +3,7 @@ module github.com/jonathanwthom/earl
 go 1.15
 
 require (
+	github.com/JonathanWThom/coinbase-commerce-go v0.0.0-20181003130201-e9181c7e8ea8
 	github.com/gorilla/handlers v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/gorm v1.9.16
