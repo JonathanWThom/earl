@@ -6,30 +6,20 @@ import (
 	"github.com/jonathanwthom/earl/models"
 	"log"
 	"net/http"
-	"strings"
 )
 
 func getLinksHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Println(req)
-	// share header fetch code
-	auth := req.Header.Get("Authorization")
-	account := &models.Account{}
-	if auth != "" {
-		token := strings.ReplaceAll(auth, "basic ", "")
-		notFound := db.Where("token = ?", token).First(account).RecordNotFound()
-		if notFound {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, "Unable to find account")
-			return
-		}
-	} else {
+
+	account, err := getAccountFromToken(req)
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Must pass basic Authorization header to read links")
+		fmt.Fprintf(w, err.Error())
 		return
 	}
 
 	links := []models.Link{}
-	err := db.Where("account_id = ?", account.ID).Preload("Views").Find(&links).Error
+	err = db.Where("account_id = ?", account.ID).Preload("Views").Find(&links).Error
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
