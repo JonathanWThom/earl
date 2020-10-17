@@ -51,5 +51,6 @@ func (link *Link) Validate() error {
 }
 
 func (link *Link) shortened(request *http.Request) string {
-	return fmt.Sprintf("https://%s/%s", request.Host, link.Identifier)
+	url, _ := url.Parse(request.Referer())
+	return fmt.Sprintf("%s://%s/%s", url.Scheme, request.Host, link.Identifier)
 }
