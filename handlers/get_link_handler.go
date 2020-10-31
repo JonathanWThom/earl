@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/url"
 )
 
 func getLinkHandler(w http.ResponseWriter, req *http.Request) {
@@ -22,7 +23,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	url := link.Original
+	original := link.Original
 
 	// @todo: Break this out
 	go func() {
@@ -45,7 +46,15 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	http.Redirect(w, req, url, 302)
+	params := req.URL.Query()
+	parsed, _ := url.Parse(original)
+	q := parsed.Query()
+	for key, value := range params {
+		q.Set(key, value[0])
+	}
+	parsed.RawQuery = q.Encode()
+
+	http.Redirect(w, req, parsed.String(), 302)
 }
 
 func getLocationFromIP(req *http.Request) (models.Location, error) {
