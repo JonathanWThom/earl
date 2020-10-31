@@ -46,6 +46,11 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
+	redirect := passthroughParams(req, original)
+	http.Redirect(w, req, redirect, 302)
+}
+
+func passthroughParams(req *http.Request, original string) string {
 	params := req.URL.Query()
 	parsed, _ := url.Parse(original)
 	q := parsed.Query()
@@ -54,7 +59,7 @@ func getLinkHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	parsed.RawQuery = q.Encode()
 
-	http.Redirect(w, req, parsed.String(), 302)
+	return parsed.String()
 }
 
 func getLocationFromIP(req *http.Request) (models.Location, error) {
